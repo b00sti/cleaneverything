@@ -1,31 +1,37 @@
 package com.b00sti.cleaneverything.ui.search
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
 import com.b00sti.cleaneverything.repository.RepoRepository
-import com.b00sti.cleaneverything.util.AbsentLiveData
+import com.b00sti.cleaneverything.vo.CategoryItem
 import com.b00sti.cleaneverything.vo.Resource
 import com.b00sti.cleaneverything.vo.Status
-import java.util.*
 import javax.inject.Inject
 
-class SearchViewModel @Inject constructor(repoRepository: RepoRepository) : ViewModel() {
+class SearchViewModel @Inject constructor(val repoRepository: RepoRepository) : ViewModel() {
 
     private val _query = MutableLiveData<String>()
     //private val nextPageHandler = NextPageHandler(repoRepository)
 
-    val query : LiveData<String> = _query
+    var results = MutableLiveData<Resource<MutableList<CategoryItem>>>()
+        .apply {
+            value = Resource(Status.LOADING, mutableListOf(), "")
+            repoRepository.search {
+                value = it
+            }
+        }
 
-/*    val results: LiveData<Resource<List<Repo>>> = Transformations
+    /*= Transformations
         .switchMap(_query) { search ->
             if (search.isNullOrBlank()) {
-                AbsentLiveData.create()
+                //AbsentLiveData.create()
+                repoRepository.search()
             } else {
                 repoRepository.search(search)
             }
-        }
+        }*/
+
+/*
 
     val loadMoreStatus: LiveData<LoadMoreState>
         get() = nextPageHandler.loadMoreState

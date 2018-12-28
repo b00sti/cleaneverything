@@ -1,14 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
+        <import type="com.b00sti.cleaneverything.vo.Status" />
+
+        <import type="androidx.lifecycle.MutableLiveData" />
+
+        <import type="com.b00sti.cleaneverything.vo.Resource" />
+
+        <import type="java.util.List" />
+
+        <import type="com.b00sti.cleaneverything.vo.CategoryItem" />
+
+        <variable
+            name="items"
+            type="MutableLiveData&lt;Resource&lt;List&lt;CategoryItem>>>" />
+
+        <variable
+            name="callback"
+            type="com.b00sti.cleaneverything.ui.common.RetryCallback" />
 
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#00f"/>
+        android:background="#00f">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvCategoryList"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            app:layoutManager="LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:listitem="@layout/category_item"
+            tools:visibility="visible" />
+
+        <ProgressBar
+            android:id="@+id/pbLoadCategory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:indeterminateTint="@color/colorAccent"
+            app:visibleGone="@{items.status == Status.LOADING}"
+            tools:visibility="visible" />
+
+        <TextView
+            android:id="@+id/tvNoCategoryItems"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/empty_search_result"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:visibleGone="@{items.status == Status.SUCCESS &amp;&amp; items.data.size == 0}"
+            tools:layout_editor_absoluteY="247dp"
+            tools:visibility="visible" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

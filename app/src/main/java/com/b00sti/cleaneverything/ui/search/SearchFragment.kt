@@ -4,18 +4,23 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.databinding.DataBindingUtil
 import androidx.databinding.DataBindingComponent
+import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import androidx.recyclerview.widget.RecyclerView
 import com.b00sti.cleaneverything.AppExecutors
-import com.b00sti.cleaneverything.R
 import com.b00sti.cleaneverything.binding.FragmentDataBindingComponent
 import com.b00sti.cleaneverything.databinding.SearchFragmentBinding
 import com.b00sti.cleaneverything.di.Injectable
+import com.b00sti.cleaneverything.ui.common.RetryCallback
 import com.b00sti.cleaneverything.util.autoCleared
+import com.b00sti.cleaneverything.vo.CategoryItem
 import javax.inject.Inject
+import com.b00sti.cleaneverything.R
+import java.util.*
 
 class SearchFragment : Fragment(), Injectable {
 
@@ -29,7 +34,7 @@ class SearchFragment : Fragment(), Injectable {
 
     var binding by autoCleared<SearchFragmentBinding>()
 
-    //var adapter by autoCleared<RepoListAdapter>()
+    var adapter by autoCleared<CategoryListAdapter>()
 
     lateinit var searchViewModel: SearchViewModel
 
@@ -52,27 +57,69 @@ class SearchFragment : Fragment(), Injectable {
         searchViewModel = ViewModelProviders.of(this, viewModelFactory)
             .get(SearchViewModel::class.java)
         binding.setLifecycleOwner(viewLifecycleOwner)
-/*        initRecyclerView()
-        val rvAdapter = RepoListAdapter(
+        val rvAdapter = CategoryListAdapter(
             dataBindingComponent = dataBindingComponent,
-            appExecutors = appExecutors,
-            showFullName = true
+            appExecutors = appExecutors
         ) { repo ->
-   *//*         navController().navigate(
-                //SearchFragmentDirections.showRepo(repo.owner.login, repo.name)
-            )*//*
-        }*/
+            val list = mutableListOf<CategoryItem>()
+            searchViewModel.results.value?.data?.forEach {
+                list.add(it.copy())
+            }
+            //list.addAll(searchViewModel.results.value?.data ?: listOf())
+            list.find { it.title == repo.title }?.let {
+                it.isDone = !repo.isDone
+            }
+            adapter.submitList(list)
+            //adapter.notifyDataSetChanged()
+            //navController().navigate(
+            //SearchFragmentDirections.showRepo(repo.owner.login, repo.name)
+            //)
+        }
+        initRecyclerView()
+
         //binding.query = searchViewModel.query
-        //binding.repoList.adapter = rvAdapter
-        //adapter = rvAdapter
+        binding.rvCategoryList.adapter = rvAdapter
+        adapter = rvAdapter
+        binding.items = searchViewModel.results
 
         //initSearchInputListener()
 
-/*        binding.callback = object : RetryCallback {
+        binding.callback = object : RetryCallback {
             override fun retry() {
-                searchViewModel.refresh()
+                //searchViewModel.refresh()
             }
-        }*/
+        }
+        //searchViewModel.searchLoc()
+
+    }
+
+    private fun initRecyclerView() {
+
+        binding.rvCategoryList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+/*                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val lastPosition = layoutManager.findLastVisibleItemPosition()
+                if (lastPosition == adapter.itemCount - 1) {
+                    searchViewModel.loadNextPage()
+                }*/
+            }
+        })
+        //binding.searchResult = searchViewModel.results
+        searchViewModel.results.observe(viewLifecycleOwner, Observer { result ->
+            adapter.submitList(result?.data)
+        })
+
+/*        searchViewModel.loadMoreStatus.observe(viewLifecycleOwner, Observer { loadingMore ->
+            if (loadingMore == null) {
+                binding.loadingMore = false
+            } else {
+                binding.loadingMore = loadingMore.isRunning
+                val error = loadingMore.errorMessageIfNotHandled
+                if (error != null) {
+                    //Snackbar.make(binding.loadMoreBar, error, Snackbar.LENGTH_LONG).show()
+                }
+            }
+        })*/
     }
 
 /*    private fun initSearchInputListener() {
@@ -101,34 +148,7 @@ class SearchFragment : Fragment(), Injectable {
         searchViewModel.setQuery(query)
     }
 
-    private fun initRecyclerView() {
 
-        binding.repoList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
-                val lastPosition = layoutManager.findLastVisibleItemPosition()
-                if (lastPosition == adapter.itemCount - 1) {
-                    searchViewModel.loadNextPage()
-                }
-            }
-        })
-        binding.searchResult = searchViewModel.results
-        searchViewModel.results.observe(viewLifecycleOwner, Observer { result ->
-            adapter.submitList(result?.data)
-        })
-
-        searchViewModel.loadMoreStatus.observe(viewLifecycleOwner, Observer { loadingMore ->
-            if (loadingMore == null) {
-                binding.loadingMore = false
-            } else {
-                binding.loadingMore = loadingMore.isRunning
-                val error = loadingMore.errorMessageIfNotHandled
-                if (error != null) {
-                    //Snackbar.make(binding.loadMoreBar, error, Snackbar.LENGTH_LONG).show()
-                }
-            }
-        })
-    }
 
     private fun dismissKeyboard(windowToken: IBinder) {
         val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
